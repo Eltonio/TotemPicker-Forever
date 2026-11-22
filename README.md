@@ -1,5 +1,7 @@
 <p align="center"><img src="media/logo.png" alt="TotemPicker Forever" width="160"></p>
 
+<p align="center"><img src="media/screenshot.png" alt="TotemPicker Forever in game: vertical bar with the Earth list open"></p>
+
 # TotemPicker Forever
 
 English | [Français](README.fr.md)
