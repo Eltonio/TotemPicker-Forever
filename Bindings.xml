@@ -1,0 +1,8 @@
+<Bindings>
+  <Binding name="CLICK TotemPickerForeverEarth:LeftButton" header="TOTEMPICKERFOREVER" category="ADDONS"/>
+  <Binding name="CLICK TotemPickerForeverFire:LeftButton" category="ADDONS"/>
+  <Binding name="CLICK TotemPickerForeverWater:LeftButton" category="ADDONS"/>
+  <Binding name="CLICK TotemPickerForeverAir:LeftButton" category="ADDONS"/>
+  <Binding name="CLICK TotemPickerForeverCall:LeftButton" category="ADDONS"/>
+  <Binding name="CLICK TotemPickerForeverRecall:LeftButton" category="ADDONS"/>
+</Bindings>

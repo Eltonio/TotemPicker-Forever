@@ -1,0 +1,11 @@
+package-as: TotemPickerForever
+
+ignore:
+  - media
+  - tests
+  - .gitignore
+  - .pkgmeta
+
+manual-changelog:
+  filename: CHANGELOG.md
+  markup-type: markdown

@@ -1,0 +1,17 @@
+## Interface: 16001
+## Title: TotemPicker Forever
+## Title-frFR: TotemPicker Forever
+## Notes: Shaman totem bar: left click drops, right click opens the element list, pick a totem without the tiny arrow.
+## Notes-frFR: Barre de totems du chaman : clic gauche pose, clic droit ouvre la liste de l'élément, choix du totem sans la petite flèche.
+## Author: Doel
+## Version: 0.3.1
+## Category: Combat
+## IconTexture: Interface\Icons\Spell_Nature_StoneSkinTotem
+## SavedVariablesPerCharacter: TotemPickerForeverDB
+## AddonCompartmentFunc: TotemPickerForever_OnCompartmentClick
+
+Locale.lua
+Core.lua
+Data.lua
+Bar.lua
+Options.lua
