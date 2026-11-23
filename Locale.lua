@@ -7,8 +7,8 @@ local L = {
 
   HINT_MAIN_LEFT = "Left click: drop this totem",
   HINT_MAIN_RIGHT = "Right click: open the %s list",
-  HINT_FLY_LEFT = "Left click: make it the active totem",
-  HINT_FLY_RIGHT = "Right click: drop it (active totem unchanged)",
+  HINT_FLY_LEFT = "Left click: drop it (active totem unchanged)",
+  HINT_FLY_RIGHT = "Right click: make it the active totem",
   HINT_FLY_MIDDLE = "Middle click: drop it and make it active",
   HINT_CALL_LEFT = "Left click: cast this call",
   HINT_CALL_RIGHT = "Right click: switch to the next call and its totem set",
@@ -51,7 +51,7 @@ local L = {
   MSG_RESET = "Position reset.",
   MSG_NOT_SHAMAN = "This addon only works on a shaman.",
   MSG_SYNC_FAIL = "The game's totem bar did not follow the change: Call of the Elements may drop the old totem. Type /tpk diag and send the result to Doel.",
-  MSG_MIDDLE_FAIL = "Middle click dropped the totem but could not set it in the game's totem bar on this client. Use left click to set it.",
+  MSG_MIDDLE_FAIL = "Middle click dropped the totem but could not set it in the game's totem bar on this client. Use right click to set it.",
   HELP = "Commands: /tpk (options), /tpk lock, /tpk unlock, /tpk reset, /tpk diag",
 
   BINDING_HEADER = "TotemPicker Forever",
@@ -66,8 +66,8 @@ local F = {
 
     HINT_MAIN_LEFT = "Clic gauche : poser ce totem",
     HINT_MAIN_RIGHT = "Clic droit : ouvrir la liste %s",
-    HINT_FLY_LEFT = "Clic gauche : en faire le totem actif",
-    HINT_FLY_RIGHT = "Clic droit : le poser (sans changer le totem actif)",
+    HINT_FLY_LEFT = "Clic gauche : le poser (sans changer le totem actif)",
+    HINT_FLY_RIGHT = "Clic droit : en faire le totem actif",
     HINT_FLY_MIDDLE = "Clic milieu : le poser et en faire le totem actif",
     HINT_CALL_LEFT = "Clic gauche : lancer cet appel",
     HINT_CALL_RIGHT = "Clic droit : passer à l'appel suivant et à son jeu de totems",
@@ -109,7 +109,7 @@ local F = {
     MSG_RESET = "Position réinitialisée.",
     MSG_NOT_SHAMAN = "Cet addon ne fonctionne que sur un chaman.",
     MSG_SYNC_FAIL = "La barre de totems du jeu n'a pas suivi le changement : Appel des éléments risque de poser l'ancien totem. Tapez /tpk diag et envoyez le résultat à Doel.",
-    MSG_MIDDLE_FAIL = "Le clic milieu a posé le totem mais n'a pas pu l'inscrire dans la barre de totems du jeu sur ce client. Utilisez le clic gauche pour l'assigner.",
+    MSG_MIDDLE_FAIL = "Le clic milieu a posé le totem mais n'a pas pu l'inscrire dans la barre de totems du jeu sur ce client. Utilisez le clic droit pour l'assigner.",
     HELP = "Commandes : /tpk (options), /tpk lock, /tpk unlock, /tpk reset, /tpk diag",
 
     BIND_DROP = "Poser le totem %s",

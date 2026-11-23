@@ -21,8 +21,8 @@ Copy the `TotemPickerForever` folder into the AddOns folder of your WoW Forever 
 - Right click: open or close the list of that element.
 
 **In the totem list**
-- Left click: make it the active totem, without dropping it. It is also written into the game's totem bar, so Call of the Elements will drop it.
-- Right click: drop it, without changing the active totem.
+- Left click: drop it, without changing the active totem.
+- Right click: make it the active totem, without dropping it. It is also written into the game's totem bar, so Call of the Elements will drop it.
 - Middle click: drop it and make it the active totem.
 
 **Call button (Call of the Elements / Ancestors / Spirits)**

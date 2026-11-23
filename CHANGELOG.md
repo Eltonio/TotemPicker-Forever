@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.2 (beta)
+- Totem lists: left and right clicks are swapped, as suggested by players. **Left click now drops the totem** (active totem unchanged), **right click makes it the active totem** (and sets it in the game's totem bar for Call of the Elements). Middle click is unchanged: drop it and make it active.
+- Element buttons, Call button and handle: no change.
+
 ## 0.3.1 (beta)
 - New name: TotemPicker Forever (was TotemBar Forever during the private tests). New folder, command `/tpk`; settings and key bindings from the test versions are not carried over.
 - Options window: its width now follows the longest text, so labels never overflow (French texts were cut).

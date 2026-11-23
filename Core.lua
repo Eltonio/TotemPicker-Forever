@@ -4,7 +4,7 @@ local addonName, ns = ...
 local L = ns.L
 
 ns.name = addonName
-ns.VERSION = "0.3.1"
+ns.VERSION = "0.3.2"
 ns.AUTHOR = "Doel"
 
 ------------------------------------------------------------------------

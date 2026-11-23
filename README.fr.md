@@ -15,8 +15,8 @@ Barre de totems pour chaman sur World of Warcraft: Forever (interface 16001). El
 - Clic droit : ouvre ou ferme la liste des totems de l'élément.
 
 **Dans la liste des totems**
-- Clic gauche : en fait le totem actif, sans le poser. Il est aussi inscrit dans la barre de totems du jeu, donc Appel des éléments le posera.
-- Clic droit : le pose, sans changer le totem actif.
+- Clic gauche : le pose, sans changer le totem actif.
+- Clic droit : en fait le totem actif, sans le poser. Il est aussi inscrit dans la barre de totems du jeu, donc Appel des éléments le posera.
 - Clic milieu : le pose et en fait le totem actif.
 
 **Bouton d'appel (Appel des éléments / des ancêtres / des esprits)**

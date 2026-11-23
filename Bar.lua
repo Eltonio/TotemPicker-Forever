@@ -2,9 +2,9 @@
 --
 -- Clicks (all work in combat, they run in Blizzard's secure environment):
 --   element button : left = drop the active totem, right = open/close the element list
---   list button    : left = make it the active totem (also written to the game's totem bar,
---                    so Call of the Elements follows), right = drop it without changing
---                    the active totem, middle = drop it and make it active
+--   list button    : left = drop it without changing the active totem, right = make it the
+--                    active totem (also written to the game's totem bar, so Call of the
+--                    Elements follows), middle = drop it and make it active
 --   call button    : left = cast the current Call, right = switch to the next known Call
 --                    (and its totem set); no list
 --   blue handle    : drag = move (unlocked), Shift+right = lock/unlock, Shift+middle = options
@@ -57,9 +57,9 @@ local SNIPPET_TOGGLE = [[
   return false
 ]]
 
--- Totem list button: left (press) and middle (press) make it the active totem of the current set.
+-- Totem list button: right (press) and middle (press) make it the active totem of the current set.
 local SNIPPET_TOTEM = [[
-  if down and (button == "LeftButton" or button == "MiddleButton") then
+  if down and (button == "RightButton" or button == "MiddleButton") then
     local idx = self:GetAttribute("tpk-index")
     local main = owner:GetFrameRef("main" .. idx)
     local value = self:GetAttribute("tpk-value")
@@ -208,7 +208,7 @@ local function CreateFlyout(index)
 end
 
 ------------------------------------------------------------------------
--- Sync check: after a left/middle click in a list, the game's totem bar slot
+-- Sync check: after a right/middle click in a list, the game's totem bar slot
 -- should now hold the chosen totem. If not, warn once.
 ------------------------------------------------------------------------
 local lastCheck = 0
@@ -224,7 +224,7 @@ local function ScheduleSyncCheck(btn, mouse)
   C_Timer.After(0.5, function()
     local id = API.ActionSpell(action)
     if id == nil or e.id == nil or id == e.id then return end
-    if mouse == "LeftButton" then
+    if mouse == "RightButton" then
       if not ns.syncBroken then
         ns.syncBroken = true
         ns.Print(L.MSG_SYNC_FAIL)
@@ -243,19 +243,20 @@ local function GetFlyButton(index, k)
   b.index = index
   b:SetAttribute("tpk-index", index)
   b:SetAttribute("pressAndHoldAction", true)
-    b:SetAttribute("type1", "multispell")
-    b:SetAttribute("type2", "spell")
-    b:SetAttribute("type3", "spell")
-    b:SetAttribute("typerelease3", "multispell")
-    header:WrapScript(b, "OnClick", SNIPPET_TOTEM)
-    b:HookScript("PostClick", function(self, mouse, down)
-      if mouse == "LeftButton" and down ~= false then
-        ScheduleSyncCheck(self, mouse)
-      elseif mouse == "MiddleButton" and not down then
-        ScheduleSyncCheck(self, mouse)
-      end
-    end)
-    header:SetFrameRef("fb" .. index .. "_" .. k, b)
+  -- left = drop, right = set active (SetMultiCastSpell), middle = drop on press + set on release
+  b:SetAttribute("type1", "spell")
+  b:SetAttribute("type2", "multispell")
+  b:SetAttribute("type3", "spell")
+  b:SetAttribute("typerelease3", "multispell")
+  header:WrapScript(b, "OnClick", SNIPPET_TOTEM)
+  b:HookScript("PostClick", function(self, mouse, down)
+    if mouse == "RightButton" and down ~= false then
+      ScheduleSyncCheck(self, mouse)
+    elseif mouse == "MiddleButton" and not down then
+      ScheduleSyncCheck(self, mouse)
+    end
+  end)
+  header:SetFrameRef("fb" .. index .. "_" .. k, b)
   list[k] = b
   return b
 end
