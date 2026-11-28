@@ -24,6 +24,9 @@ local FALLBACK = {
 local CALL_SPELLS = { 66842, 66843, 66844 } -- Elements, Ancestors, Spirits
 local RECALL_SPELLS = { 36936 }
 
+-- "Empty slot" choice: same value as Blizzard's own flyout, SetMultiCastSpell(action, 0) clears the slot.
+Data.EMPTY = 0
+
 Data.byValue = {}     -- value -> entry
 Data.totems = {}      -- [elementIndex] = { entries }
 Data.calls = {}       -- { entries with .page }
@@ -96,6 +99,7 @@ function Data.Scan()
   ReadPriorities()
   ReadActionMap()
   wipe(Data.byValue)
+  Data.byValue[Data.EMPTY] = { value = Data.EMPTY, empty = true, name = L.EMPTY_SLOT }
   Data.mode = API.GetMultiCastTotemSpells and "multicast" or "fallback"
 
   for i, el in ipairs(Data.ELEMENTS) do
@@ -148,9 +152,10 @@ function Data.CallForPage(page)
   return nil
 end
 
--- Is `value` one of the known totems of element i?
+-- Is `value` one of the known totems of element i (or the empty slot, once a totem is known)?
 function Data.IsValid(i, value)
   if value == nil then return false end
+  if value == Data.EMPTY then return #(Data.totems[i] or {}) > 0 end
   for _, e in ipairs(Data.totems[i] or {}) do
     if e.value == value then return true end
   end

@@ -11,7 +11,8 @@ function UnitClass() return "Chaman","SHAMAN" end
 function wipe(t) for k in pairs(t) do t[k]=nil end return t end
 tinsert = table.insert
 UISpecialFrames = {}
-DEFAULT_CHAT_FRAME = { AddMessage=function(_,m) print("CHAT> "..m) end }
+CHAT = {}
+DEFAULT_CHAT_FRAME = { AddMessage=function(_,m) CHAT[#CHAT+1]=m print("CHAT> "..m) end }
 SlashCmdList = {}
 function geterrorhandler() return function(e) print("ERROR> "..tostring(e)) end end
 local timers = {}
@@ -19,7 +20,7 @@ C_Timer = { After=function(_,f) timers[#timers+1]=f end, NewTicker=function(_,f)
 local function runTimers() while #timers>0 do local f=table.remove(timers,1) f() end end
 
 -- Spell data
-local TOTEMS = { [1]={3599,1535}, [2]={8071,5730,8075}, [3]={5394}, [4]={} }
+local TOTEMS = { [1]={3599,1535}, [2]={8071,5730,8075}, [3]={5394,5675}, [4]={} }  -- 5675 = Mana Spring
 function GetMultiCastTotemSpells(slot) return unpack(TOTEMS[slot]) end
 SECRET=false
 function issecretvalue(v) return SECRET and v=="SECRET" end
@@ -62,8 +63,10 @@ function Frame:GetWidth() return 36 end
 function Frame:SetFrameRef(k,f) self.refs[k]=f end
 function Frame:GetFrameRef(k) return self.refs[k] end
 function Frame:WrapScript(f,s,pre) f.pre = assert(loadstring(pre)) end
-function Frame:CreateTexture() local t=newObj(); t.SetTexture=function(s,x) s.tex=x end; return t end
-function Frame:CreateFontString() local t=newObj(); t.SetText=function(s,x) s.text=x end; return t end
+function Frame:CreateTexture() local t=newObj(); t.SetTexture=function(s,x) s.tex=x end
+  t.Show=function(s) s.shown=true end; t.Hide=function(s) s.shown=false end; t.SetShown=function(s,v) s.shown=v and true or false end
+  return t end
+function Frame:CreateFontString() local t=newObj(); t.SetText=function(s,x) s.text=x end; self.lastFS=t; return t end
 function Frame:GetPoint() return "CENTER",nil,"CENTER",0,0 end
 function Frame:GetHighlightTexture() return newObj() end
 function Frame:RegisterEvent(e) events[e]=self end
@@ -76,7 +79,7 @@ local function mod(f,name,btn) local v=f.attrs[name..(suffix[btn] or "")] if v==
 local function doAction(f, typ, btn)
   if typ=="spell" then log("CAST", mod(f,"spell",btn))
   elseif typ=="multispell" then
-    if multispellWorks then actions[mod(f,"action",btn)] = mod(f,"spell",btn); log("ASSIGN", mod(f,"action",btn), mod(f,"spell",btn)) end
+    if multispellWorks then local sp = mod(f,"spell",btn); actions[mod(f,"action",btn)] = (sp ~= 0) and sp or nil; log("ASSIGN", mod(f,"action",btn), mod(f,"spell",btn)) end
   end
 end
 local header
@@ -168,6 +171,51 @@ FullClick(Earth,"RightButton"); FullClick(fb(1,1),"RightButton"); runTimers(); c
 -- refresh out of combat keeps things coherent
 ns.Bar.Refresh()
 check(Earth:GetAttribute("spell")==5730 and Fire:GetAttribute("spell")==1535, "refresh keeps assignments")
+-- empty slot (last entry of each list)
+runTimers()
+inCombat = true
+check(H:GetAttribute("tpk-n1")==4 and fb(1,4).entry and fb(1,4).entry.empty, "earth list ends with the empty slot")
+check(H:GetAttribute("tpk-n4")==0, "air: no empty slot without known totem")
+check(fb(1,1):GetAttribute("type1")=="spell" and fb(1,4):GetAttribute("type1")=="multispell", "empty slot uses multispell on every button")
+FullClick(Earth,"RightButton"); n=#LOG; FullClick(fb(1,4),"RightButton")
+check(LOG[n+1]=="ASSIGN 133 0" and #LOG==n+1, "right on empty clears game slot 133, no cast")
+check(actions[133]==nil, "...game slot now empty")
+check(Earth:GetAttribute("spell")==0 and ns.db.sets[1].EARTH==0, "...earth active = empty, saved")
+check(Earth.emptyMark.shown and fb(1,4).active.shown and not fb(1,2).active.shown, "...crossed icon, empty highlighted in list")
+check(fb(1,4).emptyMark.shown and not fb(1,1).emptyMark.shown, "...cross only on the empty entry")
+n=#LOG; FullClick(Earth,"LeftButton"); check(#LOG==n, "left on empty earth drops nothing")
+FullClick(Earth,"RightButton"); check(fly(1).shown, "right still opens the earth list")
+n=#LOG; FullClick(fb(1,4),"LeftButton"); check(LOG[n+1]=="ASSIGN 133 0" and #LOG==n+1, "left on empty also clears, no cast")
+n=#LOG; FullClick(Earth,"RightButton"); FullClick(fb(1,4),"MiddleButton"); check(LOG[n+1]=="ASSIGN 133 0" and #LOG==n+1, "middle on empty: clears once, no cast")
+inCombat=false; ns.Bar.Refresh(); check(Earth:GetAttribute("spell")==0, "refresh keeps the empty slot (sync off)")
+ns.syncBroken=false; ns.Bar.Refresh(); check(Earth:GetAttribute("spell")==0 and Fire:GetAttribute("spell")==1535, "refresh keeps the empty slot (sync on)")
+inCombat=true
+runTimers(); actions[133]=8071; multispellWorks=false; CHAT={}
+FullClick(Earth,"RightButton"); FullClick(fb(1,4),"RightButton"); runTimers()
+check(ns.emptyWarned==true and #CHAT==1 and CHAT[1]:find(ns.L.MSG_EMPTY_FAIL,1,true), "empty refused by the game: warned once")
+FullClick(Earth,"RightButton"); FullClick(fb(1,4),"RightButton"); runTimers(); check(#CHAT==1, "...not twice")
+multispellWorks=true
+FullClick(Earth,"RightButton"); FullClick(fb(1,2),"RightButton"); runTimers()
+check(Earth:GetAttribute("spell")==5730 and actions[133]==5730 and not Earth.emptyMark.shown, "picking a totem again restores it")
+-- shopping list joke (temporary option)
+local function chatHas(t) for _,m in ipairs(CHAT) do if m:find(t,1,true) then return true end end return false end
+check(ns.db.shopping==false, "shopping list off by default")
+CHAT={}; FullClick(Water,"RightButton"); FullClick(fb(3,2),"LeftButton"); check(lastLog()=="CAST 5675" and not chatHas(ns.L.MSG_BEER), "option off: mana spring, no message")
+local shopBox
+for _,f in ipairs(allFrames) do if f.kind=="CheckButton" and f.lastFS and f.lastFS.text==ns.L.OPT_SHOPPING then shopBox=f end end
+if not shopBox then SlashCmdList.TOTEMPICKERFOREVER("options") for _,f in ipairs(allFrames) do if f.kind=="CheckButton" and f.lastFS and f.lastFS.text==ns.L.OPT_SHOPPING then shopBox=f end end end
+check(shopBox ~= nil, "options: shopping list checkbox present")
+if shopBox then shopBox.GetChecked=function() return true end; shopBox.scripts.OnClick(shopBox) end
+check(ns.db.shopping==true, "checkbox turns it on")
+if _G.TotemPickerForeverOptions then _G.TotemPickerForeverOptions:Hide() end
+CHAT={}; FullClick(Water,"RightButton"); FullClick(fb(3,2),"LeftButton"); check(chatHas(ns.L.MSG_BEER), "option on: mana spring in list -> beer message")
+CHAT={}; FullClick(Water,"RightButton"); FullClick(fb(3,1),"LeftButton"); check(not chatHas(ns.L.MSG_BEER), "...not for another water totem")
+FullClick(Water,"RightButton"); FullClick(fb(3,2),"RightButton"); check(Water:GetAttribute("spell")==5675, "mana spring set active")
+CHAT={}; FullClick(Water,"LeftButton"); check(lastLog()=="CAST 5675" and chatHas(ns.L.MSG_BEER), "water button -> beer message too")
+CHAT={}; FullClick(Water,"RightButton"); check(not chatHas(ns.L.MSG_BEER), "...not when opening the list")
+FullClick(Water,"RightButton")
+ns.db.shopping=false
+inCombat=false; fire("PLAYER_REGEN_ENABLED"); runTimers()
 -- options layout variations
 for _,o in ipairs({"H","V"}) do for _,d in ipairs({"AUTO","UP","DOWN","LEFT","RIGHT"}) do ns.db.orientation=o; ns.db.flyDir=d; ns.Bar.ApplySettings() end end
 check(true, "all layouts ran")

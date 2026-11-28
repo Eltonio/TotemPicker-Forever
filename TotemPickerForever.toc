@@ -4,7 +4,7 @@
 ## Notes: Shaman totem bar: left click drops, right click opens the element list, pick a totem without the tiny arrow.
 ## Notes-frFR: Barre de totems du chaman : clic gauche pose, clic droit ouvre la liste de l'élément, choix du totem sans la petite flèche.
 ## Author: Doel
-## Version: 0.3.2
+## Version: 0.3.3
 ## Category: Combat
 ## IconTexture: Interface\Icons\Spell_Nature_StoneSkinTotem
 ## SavedVariablesPerCharacter: TotemPickerForeverDB

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.3 (beta)
+- Totem lists: new last entry, **empty slot** (greyed element icon with a cross). Any click on it leaves that element empty in the current totem set: it is also cleared in the game's totem bar, so Call of the Elements drops no totem of that element. The element button then shows the crossed icon and does nothing on left click; right click still opens the list to pick a totem again.
+- The choice is saved per totem set (Elements, Ancestors, Spirits), like the totems.
+
 ## 0.3.2 (beta)
 - Totem lists: left and right clicks are swapped, as suggested by players. **Left click now drops the totem** (active totem unchanged), **right click makes it the active totem** (and sets it in the game's totem bar for Call of the Elements). Middle click is unchanged: drop it and make it active.
 - Element buttons, Call button and handle: no change.

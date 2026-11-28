@@ -126,7 +126,7 @@ end
 ------------------------------------------------------------------------
 local function Build()
   frame = CreateFrame("Frame", "TotemPickerForeverOptions", UIParent)
-  frame:SetSize(520, 390)
+  frame:SetSize(520, 420)
   frame:SetPoint("CENTER")
   frame:SetFrameStrata("DIALOG")
   frame:SetMovable(true)
@@ -163,7 +163,7 @@ local function Build()
     end
     return w
   end
-  local leftChecks = { L.OPT_LOCK, L.OPT_CLOSE, L.OPT_TIMERS, L.OPT_COLORS, L.OPT_HIDEBLIZZ }
+  local leftChecks = { L.OPT_LOCK, L.OPT_CLOSE, L.OPT_TIMERS, L.OPT_COLORS, L.OPT_HIDEBLIZZ, L.OPT_SHOPPING }
   local rightChecks = { L.OPT_SHOWCALL, L.OPT_SHOWRECALL, L.OPT_HIDEEMPTY, L.OPT_TOOLTIPS, L.OPT_COOLDOWNS }
   local leftW = math.max(widest(leftChecks) + 28, 250, widest({ L.OPT_SIZE, L.OPT_SPACING, L.OPT_FLYSPACING }))
   local rightW = math.max(widest(rightChecks) + 28, 150, widest({ L.OPT_ORIENT, L.OPT_FLYDIR, L.OPT_LANG }))
@@ -201,6 +201,8 @@ local function Build()
   y = y - 28
   Check(frame, "hideBlizzard", L.OPT_HIDEBLIZZ, x1, y)
   Check(frame, "cooldowns", L.OPT_COOLDOWNS, x2, y)
+  y = y - 28
+  Check(frame, "shopping", L.OPT_SHOPPING, x1, y) -- joke option (temporary)
 
   local reset = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
   reset:SetSize(200, 22)

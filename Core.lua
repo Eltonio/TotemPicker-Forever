@@ -4,7 +4,7 @@ local addonName, ns = ...
 local L = ns.L
 
 ns.name = addonName
-ns.VERSION = "0.3.2"
+ns.VERSION = "0.3.3"
 ns.AUTHOR = "Doel"
 
 ------------------------------------------------------------------------
@@ -250,6 +250,7 @@ ns.defaults = {
   closeOnClick = true,
   tooltips = true,
   hideBlizzard = false,
+  shopping = false,     -- joke option for the beta testers (temporary)
   language = "AUTO",    -- AUTO | enUS | frFR
   page = 1,
   sets = { {}, {}, {} }, -- sets[page][ELEMENT_KEY] = spell (id or name)

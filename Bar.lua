@@ -5,6 +5,8 @@
 --   list button    : left = drop it without changing the active totem, right = make it the
 --                    active totem (also written to the game's totem bar, so Call of the
 --                    Elements follows), middle = drop it and make it active
+--   empty slot     : last entry of each list, any click leaves the element empty (the game's
+--                    slot is cleared, the element button then does nothing); value 0
 --   call button    : left = cast the current Call, right = switch to the next known Call
 --                    (and its totem set); no list
 --   blue handle    : drag = move (unlocked), Shift+right = lock/unlock, Shift+middle = options
@@ -23,6 +25,7 @@ local header, mover
 local mains = {}        -- [i] element buttons
 local flyouts = {}      -- [1..4] element lists, [5] call list
 local flyButtons = {}   -- [1..5] = { buttons }
+local entries = {}      -- [1..4] = entries shown in the list (known totems + empty slot)
 local callBtn, recallBtn
 local built = false
 
@@ -38,7 +41,11 @@ local DEFAULT_ICONS = {
 ------------------------------------------------------------------------
 -- Element button and call button: right click toggles their list, never casts.
 local SNIPPET_TOGGLE = [[
-  if button ~= "RightButton" then return end
+  if button ~= "RightButton" then
+    -- empty slot chosen: nothing to drop
+    if self:GetAttribute("spell") == 0 then return false end
+    return
+  end
   if down then
     local idx = self:GetAttribute("tpk-index")
     local fly = owner:GetFrameRef("flyout" .. idx)
@@ -58,8 +65,9 @@ local SNIPPET_TOGGLE = [[
 ]]
 
 -- Totem list button: right (press) and middle (press) make it the active totem of the current set.
+-- The empty-slot button does it for any click.
 local SNIPPET_TOTEM = [[
-  if down and (button == "RightButton" or button == "MiddleButton") then
+  if down and (button == "RightButton" or button == "MiddleButton" or self:GetAttribute("tpk-empty")) then
     local idx = self:GetAttribute("tpk-index")
     local main = owner:GetFrameRef("main" .. idx)
     local value = self:GetAttribute("tpk-value")
@@ -114,11 +122,23 @@ local function ShowTooltip(self)
   else
     e = self.entry
   end
+  local function hint(t) GameTooltip:AddLine(t, 0.4, 0.8, 1) end
+  if e and e.empty then
+    GameTooltip:SetText(L.EMPTY_SLOT .. " (" .. (self.label or L[Data.ELEMENTS[self.index].key]) .. ")")
+    GameTooltip:AddLine(L.EMPTY_DESC, 1, 1, 1, true)
+    GameTooltip:AddLine(" ")
+    if self.kind == "main" then
+      hint(string.format(L.HINT_MAIN_RIGHT, self.label or ""))
+    else
+      hint(L.HINT_EMPTY)
+    end
+    GameTooltip:Show()
+    return
+  end
   local shown = false
   if e and e.id then shown = pcall(GameTooltip.SetSpellByID, GameTooltip, e.id) end
   if not shown then GameTooltip:SetText(e and e.name or (self.label or "")) end
   GameTooltip:AddLine(" ")
-  local function hint(t) GameTooltip:AddLine(t, 0.4, 0.8, 1) end
   if self.kind == "main" then
     hint(L.HINT_MAIN_LEFT); hint(string.format(L.HINT_MAIN_RIGHT, self.label or ""))
   elseif self.kind == "totem" then
@@ -156,6 +176,12 @@ local function CreateIconButton(name, parent, kind)
   b.active:SetBlendMode("ADD")
   b.active:SetAllPoints()
   b.active:Hide()
+
+  -- Cross shown on the greyed element icon for the empty slot.
+  b.emptyMark = b:CreateTexture(nil, "OVERLAY")
+  b.emptyMark:SetTexture("Interface\\Buttons\\UI-GroupLoot-Pass-Up")
+  b.emptyMark:SetPoint("CENTER")
+  b.emptyMark:Hide()
 
   b:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square")
   local hl = b:GetHighlightTexture()
@@ -223,6 +249,14 @@ local function ScheduleSyncCheck(btn, mouse)
   local action = Data.ActionSlot(page, el.slot)
   C_Timer.After(0.5, function()
     local id = API.ActionSpell(action)
+    if e.empty then
+      -- the game's slot should now be empty
+      if id ~= nil and not ns.emptyWarned then
+        ns.emptyWarned = true
+        ns.Print(L.MSG_EMPTY_FAIL)
+      end
+      return
+    end
     if id == nil or e.id == nil or id == e.id then return end
     if mouse == "RightButton" then
       if not ns.syncBroken then
@@ -236,6 +270,45 @@ local function ScheduleSyncCheck(btn, mouse)
   end)
 end
 
+------------------------------------------------------------------------
+-- "Shopping list": joke option for the beta testers, TEMPORARY (remove in the next version).
+-- Clicking Mana Spring Totem with the option on prints a reminder in the chat.
+------------------------------------------------------------------------
+local MANA_SPRING = { [5675] = true, [10495] = true, [10496] = true, [10497] = true,
+  [25570] = true, [58771] = true, [58773] = true, [58774] = true }
+local lastBeer = 0
+local function ShoppingList(e)
+  if not (ns.db.shopping and e and e.id) then return end
+  if not MANA_SPRING[e.id] then
+    local name = API.SpellName(5675)
+    if not (name and e.name == name) then return end
+  end
+  local now = GetTime()
+  if now - lastBeer < 1 then return end
+  lastBeer = now
+  ns.Print("|cffffd200" .. L.MSG_BEER .. "|r")
+end
+
+-- Button attributes for a list entry (out of combat only).
+local function SetListAction(b, e)
+  b:SetAttribute("tpk-value", e.value)
+  b:SetAttribute("spell", e.value)
+  b:SetAttribute("tpk-empty", e.empty and true or false)
+  if e.empty then
+    -- any click clears the slot in the game's totem bar
+    b:SetAttribute("type1", "multispell")
+    b:SetAttribute("type2", "multispell")
+    b:SetAttribute("type3", "multispell")
+    b:SetAttribute("typerelease3", nil)
+  else
+    -- left = drop, right = set active (SetMultiCastSpell), middle = drop on press + set on release
+    b:SetAttribute("type1", "spell")
+    b:SetAttribute("type2", "multispell")
+    b:SetAttribute("type3", "spell")
+    b:SetAttribute("typerelease3", "multispell")
+  end
+end
+
 local function GetFlyButton(index, k)
   local list = flyButtons[index]
   if list[k] then return list[k] end
@@ -243,18 +316,17 @@ local function GetFlyButton(index, k)
   b.index = index
   b:SetAttribute("tpk-index", index)
   b:SetAttribute("pressAndHoldAction", true)
-  -- left = drop, right = set active (SetMultiCastSpell), middle = drop on press + set on release
-  b:SetAttribute("type1", "spell")
-  b:SetAttribute("type2", "multispell")
-  b:SetAttribute("type3", "spell")
-  b:SetAttribute("typerelease3", "multispell")
   header:WrapScript(b, "OnClick", SNIPPET_TOTEM)
   b:HookScript("PostClick", function(self, mouse, down)
-    if mouse == "RightButton" and down ~= false then
+    local e = self.entry
+    if e and e.empty then
+      if down ~= false then ScheduleSyncCheck(self, mouse) end
+    elseif mouse == "RightButton" and down ~= false then
       ScheduleSyncCheck(self, mouse)
     elseif mouse == "MiddleButton" and not down then
       ScheduleSyncCheck(self, mouse)
     end
+    if down ~= false then ShoppingList(e) end
   end)
   header:SetFrameRef("fb" .. index .. "_" .. k, b)
   list[k] = b
@@ -264,15 +336,22 @@ end
 ------------------------------------------------------------------------
 -- Visual updates (safe in combat: textures and font strings only)
 ------------------------------------------------------------------------
+-- Totem icon, or the element icon greyed out (and crossed for the empty slot).
+local function SetButtonIcon(b, e, key)
+  local empty = (e and e.empty) and true or false
+  b.icon:SetTexture((e and not empty and e.icon) or DEFAULT_ICONS[key])
+  b.icon:SetDesaturated(not e or empty)
+  if empty then b.icon:SetVertexColor(0.55, 0.55, 0.55) else b.icon:SetVertexColor(1, 1, 1) end
+  b.emptyMark:SetShown(empty)
+end
+
 function Bar.UpdateVisuals()
   if not built then return end
   local db = ns.db
   for i, el in ipairs(Data.ELEMENTS) do
     local m = mains[i]
     local value = m:GetAttribute("spell")
-    local e = Data.Entry(value)
-    m.icon:SetTexture(e and e.icon or DEFAULT_ICONS[el.key])
-    m.icon:SetDesaturated(not e)
+    SetButtonIcon(m, Data.Entry(value), el.key)
     m.strip:SetShown(db.elemColors)
     for _, b in ipairs(flyButtons[i]) do
       b.active:SetShown(b.entry ~= nil and b.entry.value == value)
@@ -392,6 +471,7 @@ local function SetFonts(b, s)
   local font = STANDARD_TEXT_FONT or "Fonts\\FRIZQT__.TTF"
   b.cdText:SetFont(font, math.max(9, math.floor(s * 0.40)), "OUTLINE")
   b.timer:SetFont(font, math.max(8, math.floor(s * 0.28)), "OUTLINE")
+  b.emptyMark:SetSize(math.floor(s * 0.62), math.floor(s * 0.62))
 end
 
 -- Duration bar on the edge opposite to the colour strip; the time text sits next to it.
@@ -476,7 +556,7 @@ function Bar.Layout()
     PlaceStrip(mains[i], dir, el.color, s)
     PlaceDuration(mains[i], dir, s)
     SetFonts(mains[i], s)
-    local n = #(Data.totems[i] or {})
+    local n = #(entries[i] or {})
     LayoutFlyout(flyouts[i], mains[i], flyButtons[i], n, s, fsp, dir)
     for k = 1, n do
       PlaceStrip(flyButtons[i][k], dir, el.color, s)
@@ -526,22 +606,27 @@ function Bar.Refresh()
     end
     m:SetAttribute("spell", m:GetAttribute("tpk-p" .. page))
 
-    for k, e in ipairs(list) do
+    -- List = known totems, then the empty slot (last, so the totems keep their place).
+    local items = {}
+    for k, e in ipairs(list) do items[k] = e end
+    if #list > 0 then items[#items + 1] = Data.Entry(Data.EMPTY) end
+    entries[i] = items
+
+    for k, e in ipairs(items) do
       local b = GetFlyButton(i, k)
       b.entry = e
-      b.icon:SetTexture(e.icon)
-      b:SetAttribute("tpk-value", e.value)
-      b:SetAttribute("spell", e.value)
+      SetButtonIcon(b, e, el.key)
+      SetListAction(b, e)
       for p = 1, 3 do b:SetAttribute("tpk-a" .. p, Data.ActionSlot(p, el.slot)) end
       b:SetAttribute("action", Data.ActionSlot(page, el.slot))
       b:Show()
     end
-    for k = #list + 1, #flyButtons[i] do
+    for k = #items + 1, #flyButtons[i] do
       flyButtons[i][k].entry = nil
       flyButtons[i][k]:Hide()
     end
-    header:SetAttribute("tpk-n" .. i, #list)
-    if #list == 0 then flyouts[i]:Hide() end
+    header:SetAttribute("tpk-n" .. i, #items)
+    if #items == 0 then flyouts[i]:Hide() end
   end
 
   for k, e in ipairs(Data.calls) do
@@ -717,6 +802,9 @@ local function Build()
       elseif name == "spell" then
         Bar.UpdateVisuals()
       end
+    end)
+    m:HookScript("PostClick", function(self, mouse, down)
+      if mouse == "LeftButton" and down ~= false then ShoppingList(Data.Entry(self:GetAttribute("spell"))) end
     end)
     mains[i] = m
     CreateFlyout(i)
